@@ -155,6 +155,13 @@ def main() -> None:
     expected_return_pct = portfolio_return * 100
     config = get_risk_profile_config(risk_profile)
     risk_class = config["risk_class"]
+    inflation_rate = 3.93
+    net_real_return = expected_return_pct - inflation_rate
+    net_real_gradient = (
+        "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+        if net_real_return >= 0
+        else "linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)"
+    )
 
     st.markdown("## Capital Diversification Framework")
     if risk_profile == "Best Mix (Help me choose)":
@@ -163,29 +170,80 @@ def main() -> None:
         )
 
     st.markdown(
+        """
+        <style>
+            div[data-baseweb="tab-list"] button {{
+                background-color: #f1f5f9;
+                border: 1px solid #e2e8f0;
+                border-radius: 6px;
+                padding: 8px 16px;
+                margin-right: 4px;
+                font-weight: 500;
+            }}
+            div[data-baseweb="tab-list"] button[aria-selected="true"] {{
+                background: linear-gradient(135deg, #2563eb, #1d4ed8);
+                color: white !important;
+                border-color: #2563eb;
+            }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    c1, c2, c3, c4, c5 = st.columns(5)
+
+    c1.markdown(
         f"""
-        <div style='display:flex;flex-wrap:wrap;gap:12px; margin-bottom: 14px;'>
-            <div class='metric-card' style='flex:1; min-width:220px; background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%);'>
-                <div class='label'>Total Capital</div>
-                <div class='value'>₹{investment:,.0f}</div>
-                <div class='note'>Starting amount you want to put to work.</div>
-            </div>
-            <div class='metric-card' style='flex:1; min-width:220px; background:linear-gradient(135deg, #2563eb 0%, #10b981 100%);'>
-                <div class='label'>Total Expected Return</div>
-                <div class='value'>{expected_return_pct:.1f}%</div>
-                <div class='note'>Long-run estimate for this mix.</div>
-            </div>
-            <div class='metric-card' style='flex:1; min-width:220px; background:linear-gradient(135deg, #2dd4bf 0%, #0f766e 100%);'>
-                <div class='label'>Safety & Drawdown Score</div>
-                <div class='value'>{config['safety_score']}/100</div>
-                <div class='note'>Higher means stronger protection during rough markets.</div>
-            </div>
+        <div style='background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius:22px; padding:24px; min-height:152px; color:#ffffff;'>
+            <div style='font-size:12px; text-transform:uppercase; letter-spacing:0.18em; opacity:0.85;'>Total Capital</div>
+            <div style='font-size:32px; font-weight:800; margin-top:16px;'>₹{investment:,.0f}</div>
+            <div style='margin-top:12px; font-size:13px; opacity:0.86;'>Starting amount you want to put to work.</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    c2.markdown(
+        f"""
+        <div style='background:linear-gradient(135deg, #2563eb 0%, #0fbc9b 100%); border-radius:22px; padding:24px; min-height:152px; color:#ffffff;'>
+            <div style='font-size:12px; text-transform:uppercase; letter-spacing:0.18em; opacity:0.85;'>Total Expected Return</div>
+            <div style='font-size:32px; font-weight:800; margin-top:16px;'>{expected_return_pct:.1f}%</div>
+            <div style='margin-top:12px; font-size:13px; opacity:0.86;'>Long-run estimate for this mix.</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    c3.markdown(
+        """
+        <div style='background:linear-gradient(135deg, #64748b 0%, #475569 100%); border-radius:22px; padding:24px; min-height:152px; color:#ffffff;'>
+            <div style='font-size:12px; text-transform:uppercase; letter-spacing:0.18em; opacity:0.85;'>India Inflation Rate</div>
+            <div style='font-size:32px; font-weight:800; margin-top:16px;'>3.93%</div>
+            <div style='margin-top:12px; font-size:13px; opacity:0.86;'>Fixed benchmark for real return comparison.</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    c4.markdown(
+        f"""
+        <div style='background:{net_real_gradient}; border-radius:22px; padding:24px; min-height:152px; color:#ffffff;'>
+            <div style='font-size:12px; text-transform:uppercase; letter-spacing:0.18em; opacity:0.85;'>Net Real Return Above Inflation</div>
+            <div style='font-size:32px; font-weight:800; margin-top:16px;'>{net_real_return:+.2f}%</div>
+            <div style='margin-top:12px; font-size:13px; opacity:0.86;'>{'Above inflation' if net_real_return >= 0 else 'Below inflation'}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    c5.markdown(
+        f"""
+        <div style='background:linear-gradient(135deg, #047857 0%, #064e3b 100%); border-radius:22px; padding:24px; min-height:152px; color:#ffffff;'>
+            <div style='font-size:12px; text-transform:uppercase; letter-spacing:0.18em; opacity:0.85;'>Safety & Drawdown Score</div>
+            <div style='font-size:32px; font-weight:800; margin-top:16px;'>{config['safety_score']}/100</div>
+            <div style='margin-top:12px; font-size:13px; opacity:0.86;'>Stronger protection during rough markets.</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    tab1, tab2, tab3 = st.tabs(["Framework Allocation", "Annual Returns Profile", "Risk Risk & Drawdown Assessment"])
+    tab1, tab2, tab3 = st.tabs(["Framework Allocation", "Annual Returns Profile", "Risk & Drawdown Assessment"])
 
     with tab1:
         st.markdown("### Framework Allocation")
@@ -251,13 +309,35 @@ def main() -> None:
             st.plotly_chart(fig, use_container_width=True)
 
         with right:
-            st.markdown("<div class='soft-card'>", unsafe_allow_html=True)
-            st.markdown("### Simple allocation table")
-            display_df = alloc_df.copy()
-            display_df["Recommended %"] = display_df["Recommended %"].map(lambda v: f"{v:.1f}%")
-            display_df["Amount (INR)"] = display_df["Amount (INR)"].map(lambda v: f"₹{v:,}")
-            st.table(display_df.set_index("Asset Class"))
-            st.markdown("</div>", unsafe_allow_html=True)
+            rows_html = ""
+            for idx, row in alloc_df.iterrows():
+                row_bg = "#f8fafc" if idx % 2 == 0 else "#ffffff"
+                rows_html += f"""
+                    <tr style='background:{row_bg};'>
+                        <td style='padding:14px 12px; border-bottom:1px solid #e2e8f0; text-align:left;'>{row['Asset Class']}</td>
+                        <td style='padding:14px 12px; border-bottom:1px solid #e2e8f0; text-align:right;'>{row['Recommended %']:.1f}%</td>
+                        <td style='padding:14px 12px; border-bottom:1px solid #e2e8f0; text-align:right;'>₹{row['Amount (INR)']:,}</td>
+                    </tr>
+                """
+
+            st.markdown(
+                f"""
+                <div style='background:#ffffff; border:1px solid #e2e8f0; border-radius:18px; padding:18px; box-shadow:0 10px 24px rgba(15,23,42,0.08);'>
+                    <div style='font-size:18px; font-weight:700; margin-bottom:14px;'>Simple Allocation Grid</div>
+                    <table style='width:100%; border-collapse:collapse; font-size:14px;'>
+                        <thead>
+                            <tr>
+                                <th style='padding:14px 12px; text-align:left; color:#475569;'>Asset Class</th>
+                                <th style='padding:14px 12px; text-align:right; color:#475569;'>Allocation</th>
+                                <th style='padding:14px 12px; text-align:right; color:#475569;'>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>{rows_html}</tbody>
+                    </table>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
         st.markdown("### Emergency Shield")
         st.warning(
@@ -335,20 +415,43 @@ def main() -> None:
 
     with tab3:
         st.markdown("### Risk & Drawdown Assessment")
-        fig_corr = px.imshow(correlation_matrix.round(2), text_auto=True, color_continuous_scale="Blues", aspect="auto")
+        st.markdown("### How Your Assets Behave Together (Safety Map)")
+
+        correlation_pairs = [
+            ("Nifty 50 + Gold", -0.10, "Shield (Moves opposite to protect you)"),
+            ("Nifty 50 + US Stocks", 0.60, "Growth Partner (Moves together for global diversification)"),
+            ("Equities + Bonds/Cash", 0.02, "Independent Safety Net (Steady cushion)"),
+        ]
+        corr_df = pd.DataFrame(correlation_pairs, columns=["pair", "score", "note"])
+
+        fig_corr = go.Figure()
+        for _, row in corr_df.iterrows():
+            color = "#10b981" if row["score"] <= 0 else "#2563eb"
+            fig_corr.add_trace(
+                go.Bar(
+                    x=[row["score"]],
+                    y=[row["pair"]],
+                    orientation="h",
+                    marker=dict(color=color, line=dict(color="#ffffff", width=1)),
+                    hovertemplate=f"{row['pair']}: {row['score']:.2f}<br>{row['note']}<extra></extra>",
+                )
+            )
+
         fig_corr.update_layout(
-            plot_bgcolor="#ffffff",
-            paper_bgcolor="#f8fafc",
-            font={"color": "#0f172a"},
-            margin=dict(l=18, r=18, t=8, b=8),
+            title="How Your Assets Behave Together (Safety Map)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            margin=dict(l=20, r=20, t=40, b=20),
+            xaxis=dict(title="Correlation Score", range=[-0.25, 0.7], zeroline=True, zerolinecolor="#d1d5db"),
+            yaxis=dict(automargin=True, tickfont=dict(size=13)),
+            height=380,
+            bargap=0.35,
         )
-        fig_corr.update_xaxes(showgrid=True, gridcolor="#e2e8f0", zeroline=False)
-        fig_corr.update_yaxes(showgrid=True, gridcolor="#e2e8f0", zeroline=False)
         st.plotly_chart(fig_corr, use_container_width=True)
 
         st.markdown("How This Mix Protects Your Capital (Hedging Guide)")
         st.write(
-            "Notice how some blocks on the matrix show very low or negative numbers? When equities weaken, gold and bonds often help cushion the fall. That balance keeps your wealth steadier during market corrections."
+            "Notice how some pairings show protection while others move together for growth. This simple view helps you understand where your portfolio leans on shields, cushions, and diversification."
         )
 
         st.markdown("### Historical Portfolio Drawdown Graph")
