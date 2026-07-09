@@ -3,53 +3,35 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-st.set_page_config(page_title="Global Multi-Asset Portfolio Optimizer", page_icon="📈", layout="wide")
 
-st.markdown(
-    """
-    <style>
-        :root {
-            color-scheme: light;
-        }
-        body, .stApp {
-            background-color: #f8fafc;
-            color: #0f172a;
-            font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-        }
-        .block-container {
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-        }
-        h1, h2, h3, h4, h5 {
-            font-weight: 600;
-            letter-spacing: 0.2px;
-            color: #0f172a;
-            font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-        }
-        /* Sidebar styling */
-        .stSidebar {
-            background-color: #ffffff;
-            border-right: 1px solid #e2e8f0;
-            color: #0f172a;
-        }
-        /* Card / metric styling */
-        .stMetric, .card {
-            background-color: #ffffff !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 12px;
-            padding: 12px !important;
-            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06) !important;
-            color: #0f172a !important;
-        }
-        .card h4 { margin-top: 0; }
-        /* Ensure dataframes have a subtle background */
-        .stDataFrameContainer { background: transparent; }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+st.set_page_config(page_title="Retail Investor Terminal — Multi-Asset Optimizer", page_icon="🤖📈", layout="wide")
 
-assets = ["Domestic Equities (Nifty 50)", "International Equities (S&P 500)", "Fixed Income (Corporate Debt)", "Gold", "Liquid Cash"]
+
+# --- Premium light-slate corporate theme CSS ---
+st.markdown("""
+<style>
+  :root { color-scheme: light; }
+  body, .stApp { background-color: #f8fafc; color: #0f172a; }
+  .block-container { padding-top: 1.6rem; padding-bottom: 1.6rem; }
+  h1, h2, h3, h4 { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial; font-weight:600; letter-spacing:0.2px; color:#0f172a; }
+  .stSidebar { background-color: #ffffff; border-right: 1px solid #e2e8f0; }
+  .card { background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:14px; box-shadow:0 6px 18px rgba(15,23,42,0.06); color:#0f172a; }
+  .metric-row > div { padding: 6px; }
+  .ai-box { background: linear-gradient(180deg,#ffffff,#fbfdff); border:1px solid #e2e8f0; padding:16px; border-radius:12px; box-shadow:0 10px 30px rgba(15,23,42,0.06); }
+  .small-muted { color:#475569; font-size:13px; }
+  table.dataframe { background: transparent; }
+</style>
+""", unsafe_allow_html=True)
+
+
+# --- Asset universe and modelling inputs (unchanged) ---
+assets = [
+    "Domestic Equities (Nifty 50)",
+    "International Equities (S&P 500)",
+    "Fixed Income (Corporate Debt)",
+    "Gold",
+    "Liquid Cash",
+]
 
 expected_returns = np.array([0.12, 0.10, 0.08, 0.07, 0.05])
 volatilities = np.array([0.16, 0.18, 0.05, 0.12, 0.01])
@@ -85,115 +67,147 @@ def optimize_weights(risk_profile: str) -> np.ndarray:
     return w
 
 
-st.title("Global Multi-Asset Portfolio Optimizer")
-st.caption("A premium, dark-mode dashboard for diversified wealth building across global markets and defensive assets.")
+st.title("Retail Investor Terminal — Multi-Asset Optimizer")
+st.markdown("<div class='small-muted'>A friendly terminal that recommends diversified allocations and provides clear, actionable next steps.</div>", unsafe_allow_html=True)
 
+
+# --- Sidebar inputs ---
 with st.sidebar:
     st.header("Investor Inputs")
     investment = st.number_input("Investment Amount (INR)", min_value=10000, value=5000000, step=10000, format="%d")
-    risk_profile = st.selectbox("Risk Profile", ["Conservative", "Moderate", "Aggressive"])
+    risk_profile = st.selectbox("Risk Profile", ["Conservative", "Moderate", "Aggressive"]) 
     st.markdown("---")
     st.subheader("Portfolio Logic")
-    st.write("The optimizer balances return potential, volatility, and diversification using a risk-adjusted allocation engine.")
+    st.write("A risk-adjusted allocation engine balances return and volatility while preserving liquidity and diversification.")
 
+
+# --- Core calculations (kept intact) ---
 weights = optimize_weights(risk_profile)
 allocation_inr = weights * investment
 portfolio_return = float(weights @ expected_returns)
 portfolio_volatility = float(np.sqrt(weights @ covariance_matrix @ weights))
 portfolio_sharpe = (portfolio_return - 0.04) / portfolio_volatility if portfolio_volatility else 0.0
 
-allocation_df = pd.DataFrame(
-    {
-        "Asset Class": assets,
-        "Allocation Weight": weights * 100,
-        "Allocation INR": allocation_inr,
-    }
-)
-allocation_df = allocation_df.round({"Allocation Weight": 2, "Allocation INR": 2})
 
-col1, col2, col3 = st.columns(3)
-col1.metric("Expected Annual Return", f"{portfolio_return * 100:.2f}%")
-col2.metric("Expected Volatility", f"{portfolio_volatility * 100:.2f}%")
-col3.metric("Sharpe Lens", f"{portfolio_sharpe:.2f}")
+# --- Overview metrics section ---
+st.markdown("## Overview")
+col_t, col_r, col_v = st.columns([1,1,1])
+with col_t:
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("Total Capital")
+    st.markdown(f"<h2>₹{investment:,.0f}</h2>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+with col_r:
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("Expected Annual Return")
+    st.markdown(f"<h2>{portfolio_return*100:.2f}%</h2>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+with col_v:
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("Risk Level")
+    st.markdown(f"<h2>{risk_profile}</h2>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("### Asset Allocation")
-left_col, right_col = st.columns([1.2, 0.95])
-with left_col:
+
+
+# --- Allocation visualization and table ---
+st.markdown("## Recommended Allocation")
+left, right = st.columns([1.4, 0.8])
+alloc_df = pd.DataFrame({
+    "Asset Class": assets,
+    "Recommended %": (weights * 100).round(2),
+    "Amount (INR)": allocation_inr.round(0).astype(int),
+})
+
+with left:
     fig = px.bar(
-        allocation_df,
-        x="Allocation Weight",
+        alloc_df,
+        x="Recommended %",
         y="Asset Class",
         orientation="h",
-        text="Allocation Weight",
-        color="Allocation Weight",
-        color_continuous_scale="Viridis",
+        text="Recommended %",
+        color="Recommended %",
+        color_continuous_scale="Greys",
     )
-    fig.update_traces(texttemplate="%{text:.1f} %", textposition="outside")
+    fig.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
     fig.update_layout(
         plot_bgcolor="#ffffff",
         paper_bgcolor="#f8fafc",
         font={"color": "#0f172a"},
         margin=dict(l=20, r=20, t=10, b=10),
         coloraxis_showscale=False,
-        xaxis=dict(showgrid=True, gridcolor="#e6e8eb", zeroline=False),
-        yaxis=dict(showgrid=False),
     )
+    fig.update_xaxes(showgrid=True, gridcolor="#e6e8eb", zeroline=False)
+    fig.update_yaxes(showgrid=False)
     st.plotly_chart(fig, use_container_width=True)
 
-with right_col:
-    st.markdown("<div class='card'><h4 style='margin-top:0'>Allocation Breakdown</h4></div>", unsafe_allow_html=True)
-    st.dataframe(
-        allocation_df.assign(Allocation_INR=allocation_df["Allocation INR"].map(lambda v: f"₹{v:,.0f}")),
-        hide_index=True,
-        use_container_width=True,
-    )
-    st.markdown(f"<div class='card'><strong>Cash Distribution:</strong> ₹{allocation_df.loc[allocation_df['Asset Class'] == 'Liquid Cash', 'Allocation INR'].iloc[0]:,.0f} reserved as liquid capital.</div>", unsafe_allow_html=True)
+with right:
+    st.markdown('<div class="card"><h4 style="margin-top:0">Allocation Table</h4></div>', unsafe_allow_html=True)
+    display_df = alloc_df.copy()
+    display_df["Amount (INR)"] = display_df["Amount (INR)"].map(lambda v: f"₹{v:,}")
+    st.table(display_df.set_index("Asset Class"))
 
-st.markdown("### Correlation Matrix")
-st.write("The matrix below highlights the diversification benefit: most assets do not move in lockstep, which lowers aggregate portfolio risk.")
-fig_corr = px.imshow(
-    correlation_matrix.round(2),
-    text_auto=True,
-    color_continuous_scale="Blues",
-    aspect="auto",
-)
-fig_corr.update_layout(
-    plot_bgcolor="#ffffff",
-    paper_bgcolor="#f8fafc",
-    font={"color": "#0f172a"},
-    margin=dict(l=20, r=20, t=10, b=10),
-)
+
+
+# --- Correlation matrix ---
+st.markdown("## Correlation Matrix")
+st.write("How the asset classes move relative to each other (diversification helps reduce portfolio volatility).")
+fig_corr = px.imshow(correlation_matrix.round(2), text_auto=True, color_continuous_scale="Blues", aspect="auto")
+fig_corr.update_layout(plot_bgcolor="#ffffff", paper_bgcolor="#f8fafc", font={"color":"#0f172a"}, margin=dict(l=20,r=20,t=10,b=10))
 fig_corr.update_xaxes(showgrid=True, gridcolor="#e6e8eb", zeroline=False)
 fig_corr.update_yaxes(showgrid=True, gridcolor="#e6e8eb", zeroline=False)
 st.plotly_chart(fig_corr, use_container_width=True)
 
-st.markdown("### Strategic Advisory")
-if risk_profile == "Conservative":
-    cards = [
-        ("Capital Preservation", "Your allocation leans into corporate debt and cash to buffer drawdowns while keeping a measured equity sleeve for inflation protection.", "#38bdf8"),
-        ("Cash Buffer", "Holding a larger liquid reserve helps you stay flexible for emergencies, rebalancing, or opportunistic buying during market dips.", "#22c55e"),
-        ("Execution Note", "Review the portfolio quarterly and rebalance if equity exposure drifts above the planned range.", "#f59e0b"),
-    ]
-elif risk_profile == "Moderate":
-    cards = [
-        ("Balanced Growth", "This profile combines both developed and domestic equity exposure with steady fixed income to smooth out market cycles.", "#818cf8"),
-        ("Diversification Focus", "Gold and cash add ballast, helping the portfolio remain resilient if equity markets enter a volatile stretch.", "#34d399"),
-        ("Execution Note", "A semi-annual rebalance is ideal to keep the allocation aligned with your long-term objective.", "#fbbf24"),
-    ]
-else:
-    cards = [
-        ("Growth Orientation", "The higher equity weight seeks stronger long-term compounding, while gold adds protection during risk-off phases.", "#fb7185"),
-        ("Risk Tolerance", "This mix still preserves diversification, but it accepts more short-term volatility to pursue stronger growth.", "#f43f5e"),
-        ("Execution Note", "Stay invested through market noise and revisit the strategy only when your risk budget materially changes.", "#f59e0b"),
-    ]
 
-for title, body, accent in cards:
-    st.markdown(
-        f"""
-        <div class='card'>
-            <h4 style='margin-top:0; color:{accent};'>{title}</h4>
-            <p style='margin-bottom:0; color:#e2e8f0;'>{body}</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+
+# --- AI Suggestion Engine (deterministic template-based) ---
+st.markdown("## 🤖 AI Investment Strategist Copilot Advice")
+with st.container():
+    st.markdown('<div class="ai-box">', unsafe_allow_html=True)
+    st.subheader(f"Personalized Advice — {risk_profile} Profile")
+
+    # Build rationale based on weights
+    top_idx = int(np.argmax(weights))
+    top_asset = assets[top_idx]
+    top_weight = weights[top_idx]
+
+    rationale_lines = []
+    rationale_lines.append(f"The optimizer assigns a higher weight to {top_asset} ({top_weight*100:.1f}%) to align with the {risk_profile.lower()} objective.")
+    fi_weight = weights[2]
+    gold_weight = weights[3]
+    cash_weight = weights[4]
+    rationale_lines.append(f"Fixed Income ({fi_weight*100:.1f}%) provides income and downside protection during equity drawdowns.")
+    rationale_lines.append(f"Gold ({gold_weight*100:.1f}%) is included as an inflation hedge and a risk-off diversifier.")
+    rationale_lines.append(f"Liquid Cash ({cash_weight*100:.1f}%) preserves optionality for rebalancing or opportunistic deployment.")
+
+    st.markdown("**Strategic Rationale**")
+    for line in rationale_lines:
+        st.write(line)
+
+    # Macro benefits
+    st.markdown("**Core Macroeconomic Benefits of This Mix**")
+    macro_bullets = [
+        "Exposure to global growth via international equities reduces single-market concentration risk.",
+        "Domestic equities capture local market upside and currency-aligned returns.",
+        "Corporate debt lowers portfolio volatility and contributes steady income when yields are favorable.",
+        "Gold tends to perform in inflationary or risk-off periods, offering downside protection.",
+        "Cash ensures liquidity for tactical rebalancing and emergency needs without forced selling.",
+    ]
+    for b in macro_bullets:
+        st.write(f"- {b}")
+
+    # Next steps action plan (3 steps)
+    st.markdown("**3-Step Next Steps Action Plan**")
+    steps = [
+        "1) Establish core holdings: invest the recommended amounts as the base allocation and set rebalance rules.",
+        "2) Build a 3–6 month cash buffer (as suggested) to avoid selling into market stress.",
+        "3) Review quarterly: rebalance back to target weights and adjust if your personal risk budget changes.",
+    ]
+    for s in steps:
+        st.write(s)
+
+    # Customized quick notes
+    st.markdown("**Quick Notes**")
+    st.write(f"- Largest allocation: {top_asset} ({top_weight*100:.1f}%).")
+    st.write(f"- Portfolio expected return: {portfolio_return*100:.2f}% · Expected volatility: {portfolio_volatility*100:.2f}%")
+    st.markdown('</div>', unsafe_allow_html=True)
