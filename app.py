@@ -309,30 +309,18 @@ def main() -> None:
             st.plotly_chart(fig, use_container_width=True)
 
         with right:
-            rows_html = ""
-            for idx, row in alloc_df.iterrows():
-                row_bg = "#f8fafc" if idx % 2 == 0 else "#ffffff"
-                rows_html += f"""
-                    <tr style='background:{row_bg};'>
-                        <td style='padding:14px 12px; border-bottom:1px solid #e2e8f0; text-align:left;'>{row['Asset Class']}</td>
-                        <td style='padding:14px 12px; border-bottom:1px solid #e2e8f0; text-align:right;'>{row['Recommended %']:.1f}%</td>
-                        <td style='padding:14px 12px; border-bottom:1px solid #e2e8f0; text-align:right;'>₹{row['Amount (INR)']:,}</td>
-                    </tr>
-                """
-
-            table_html = f"""
-            <table style='width:100%; border-collapse: collapse; font-size:14px;'>
-                <thead>
-                    <tr>
-                        <th style='padding:14px 12px; text-align:left; color:#475569; border-bottom:1px solid #e2e8f0;'>Asset Class</th>
-                        <th style='padding:14px 12px; text-align:right; color:#475569; border-bottom:1px solid #e2e8f0;'>Allocation</th>
-                        <th style='padding:14px 12px; text-align:right; color:#475569; border-bottom:1px solid #e2e8f0;'>Amount</th>
-                    </tr>
-                </thead>
-                <tbody>{rows_html}</tbody>
-            </table>
-            """
-            st.markdown(table_html, unsafe_allow_html=True)
+            display_df = alloc_df.copy()
+            display_df["Recommended %"] = display_df["Recommended %"].astype(float)
+            display_df["Amount (INR)"] = display_df["Amount (INR)"]
+            styled_table = (
+                display_df.style
+                .format({
+                    "Recommended %": "{:.1f}%",
+                    "Amount (INR)": "₹{:,.0f}",
+                })
+                .background_gradient(cmap="Blues", subset=["Recommended %"])
+            )
+            st.dataframe(styled_table, use_container_width=True, hide_index=True)
 
         st.markdown("### Emergency Shield")
         st.warning(
